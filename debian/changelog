@@ -1,0 +1,141 @@
+tem-vserver (22) local; urgency=low
+
+  * bugfixes: script, gateway
+
+ -- Ard van Breemenr <ard@telegraafnet.nl>  Mon, 14 Apr 2014 14:18:42 +0200
+
+tem-vserver (21) local; urgency=low
+
+  * nieuwe build script start
+
+ -- Ard van Breemenr <ard@telegraafnet.nl>  Thu, 10 Apr 2014 12:52:17 +0200
+
+tem-vserver (20) local; urgency=low
+
+  * fixen oude stijl buildscripts om het nieuwe stijl te doen
+  * fixen van VID extractie. Nu gaat het om alle laatste cijfers.
+
+ -- Ard van Breemenr <ard@telegraafnet.nl>  Thu, 03 Apr 2014 13:23:45 +0200
+
+tem-vserver (19) local; urgency=low
+
+  * nieuwe nieuwe style vserver vlan scripts
+
+ -- Ard van Breemenr <ard@telegraafnet.nl>  Tue, 01 Apr 2014 14:31:27 +0200
+
+tem-vserver (18) local; urgency=low
+
+  * nieuwe style vserver vlan scripts
+
+ -- Ard van Breemenr <ard@telegraafnet.nl>  Tue, 18 Mar 2014 12:47:34 +0100
+
+tem-vserver (17) local; urgency=low
+
+  * minuten van cron.hourly anders dan daily,weekly,monthly zetten
+
+ -- Marcel Kuiper <marcelk@telegraafnet.nl>  Mon, 19 Aug 2013 09:23:40 +0200
+
+tem-vserver (16) local; urgency=low
+
+  * crontab.daily tijdspreiding in build-vserver.sh reparatie
+  * fstab dingetje weer weg. had Niels al gefixed
+
+ -- Marcel Kuiper <marcelk@telegraafnet.nl>  Fri, 16 Aug 2013 13:44:40 +0200
+
+tem-vserver (15) local; urgency=low
+
+  * crontab.daily tijdspreiding in build-vserver.sh
+  * fix /tmp rechten in build-vserver.sh
+  * voeg fstab zonder /tmp toe in .defaults via postinst
+
+ -- Marcel Kuiper <marcelk@telegraafnet.nl>  Fri, 16 Aug 2013 13:44:40 +0200
+
+tem-vserver (14) local; urgency=low
+
+  * new depends to tem-host
+
+ -- Niels Jansen <niels@telegraafnet.nl>  Tue, 09 Jul 2013 14:39:40 +0200
+
+tem-vserver (13) local; urgency=low
+
+  * new upstream vserver-config-size.pl and sizing.pm
+
+ -- Edwin de Vreede <edwin@telegraafnet.nl>  Tue, 02 Jul 2013 16:16:40 +0200
+
+tem-vserver (12) local; urgency=low
+
+  * new upstream vserver-config-size.pl
+
+ -- Edwin de Vreede <edwin@telegraafnet.nl>  Wed, 26 Jun 2013 09:34:11 +0200
+
+tem-vserver (11) local; urgency=low
+
+  * new upstream vserver-config-size.pl
+    cpu allocation less ht usage
+
+ -- Edwin de Vreede <edwin@telegraafnet.nl>  Tue, 04 Jun 2013 12:49:15 +0200
+
+tem-vserver (10) local; urgency=low
+
+  * new upstream vserver-config-size.pl
+    more verbose error messages
+
+ -- Edwin de Vreede <edwin@telegraafnet.nl>  Fri, 03 May 2013 14:46:18 +0200
+
+tem-vserver (9) local; urgency=low
+
+  * "tag,notagcheck" op vserver mount erbij zetten, nu rekening houdend met
+    verschillende mogelijkheden mbt. bind mounts (hopelijk)
+
+ -- Paul Slootman <paul@telegraafnet.nl>  Thu, 31 Jan 2013 15:32:26 +0100
+
+tem-vserver (8) local; urgency=low
+
+  * "tag,notagcheck" op /var mount erbij zetten 
+  * build-vserver-vlan maak script erbij. Usage:
+    build-vserver-vlan --make --vlan $vlannr
+    build-vserver-vlan --make --name $name --ip $ip [ --freeze freezeX ]
+
+ -- Paul Slootman <paul@telegraafnet.nl>  Mon, 28 Jan 2013 14:35:13 +0100
+
+tem-vserver (7) unstable; urgency=low
+
+  * nieuwe sizing script, geen swap enz.
+
+ -- Paul Slootman <paul@telegraafnet.nl>  Mon, 12 Nov 2012 16:36:17 +0100
+
+tem-vserver (6) unstable; urgency=low
+
+  * setup_network_namespace: default netmask /24 indien niet gedefinieerd
+
+ -- Paul Slootman <paul@telegraafnet.nl>  Tue, 07 Aug 2012 17:08:52 +0200
+
+tem-vserver (5) unstable; urgency=low
+
+  * build-template.sh en build-vserver.sh ook in package opgenomen
+
+ -- Paul Slootman <paul@telegraafnet.nl>  Fri, 27 Jul 2012 14:48:00 +0200
+
+tem-vserver (4) unstable; urgency=low
+
+  * check /etc/hosts me-vXXXX line for netmask
+
+ -- Paul Slootman <paul@telegraafnet.nl>  Mon, 04 Jun 2012 15:53:08 +0200
+
+tem-vserver (3) unstable; urgency=low
+
+  * fix symlink voor de vlan holder scripts
+
+ -- Paul Slootman <paul@telegraafnet.nl>  Mon, 04 Jun 2012 15:29:01 +0200
+
+tem-vserver (2) unstable; urgency=low
+
+  * met aangepaste sizing script, --dump / --dump-all 
+
+ -- Paul Slootman <paul@telegraafnet.nl>  Wed, 30 May 2012 15:37:36 +0200
+
+tem-vserver (1) unstable; urgency=low
+
+  * 1e versie
+
+ -- Paul Slootman <paul@telegraafnet.nl>  Wed, 30 May 2012 14:32:48 +0200

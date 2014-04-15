@@ -1,0 +1,33 @@
+#!/usr/bin/lua
+local tem=require("tem")
+tem:setverbose(1)
+local vserver=require("tem.vserver")
+local script=require("tem.scripts")
+local pa=require("tem.args")
+
+local vservers=vserver.list()
+local scripts=script.list()
+
+local oldversion=vserver.oldversion()
+
+local options = {}
+function options._quiet(d,cb)
+	tem:setverbose(0)
+	return 0,nil
+end
+
+function options._debug(d,cb)
+	tem:setverbose(tonumber(cb:nextarg()))
+	return 0,nil
+end
+
+
+pa.parseargs(arg,options,{})
+
+-- main: voer uit voor alle vservers:
+for _,aVserver in pairs(vservers) do
+	tem:debug(1,aVserver:name(),":")
+	aVserver:deploy_scripts(scripts)
+	aVserver:fix_dependency()
+	tem:debug(1,"\n")
+end

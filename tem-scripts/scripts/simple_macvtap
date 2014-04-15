@@ -1,0 +1,26 @@
+case "$1" in
+	pre-start)
+		local VID MAJOR MINOR DEV
+		VID=$(lua -e "print(('${2}'):match('[0-9]+\$'))")	
+		$_HIP link add link bond0 name vlan${VID} type vlan id ${VID}
+		$_HIP link set up dev vlan${VID}
+		$_HIP link add link vlan${VID} name ${2}.mvt type macvtap mode passthru
+		$_HIP link set up dev ${2}.mvt
+		read DEV < /sys/devices/virtual/net/${2}.mvt/tap*/dev	
+		MAJOR=${DEV/:*/}
+		MINOR=${DEV/*:/}
+		rm -f /etc/vservers/${2}/vdir/dev/net/macvtap
+		mkdir -p /etc/vservers/${2}/vdir/dev/net/
+		mknod /etc/vservers/${2}/vdir/dev/net/macvtap c ${MAJOR} ${MINOR}
+		;;
+	post-stop)
+		local VID
+		rm -f /etc/vservers/${2}/vdir/dev/net/macvtap
+		VID=${2#vpn}
+		$_HIP link del ${2}.mvt
+		$_HIP link del vlan${VID}
+		;;
+	*)
+		;;
+esac
+return 0

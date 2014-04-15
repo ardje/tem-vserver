@@ -1,0 +1,87 @@
+function enableInterfaces
+{
+    local i=0
+    declare -a var
+
+    lock "$__LOCKDIR"/vserver.interfaces
+
+    while test $i -lt $INTERFACE_CMDS_IDX; do
+        eval var='( "${INTERFACE_CMDS_'$i'[@]}" )'
+        local type=${var[0]}
+        unset var[0]
+
+        set -- "${var[@]}"
+        case "$type" in
+            IPTABLES)   ;; ## TODO
+            MODPROBE)
+                local mod=$1
+                local name=$2
+                shift 2
+                $_MODPROBE ${name:+-o "$name"} "$mod" "$@"
+                ;;
+            NAMEIF)             $_NAMEIF   "$@";;
+            VCONFIG)            $_VCONFIG  set_name_type "$4"      >/dev/null
+                                $_VCONFIG  add           "$2" "$3" >/dev/null;;
+            IP_ADDR)            $_IP addr  add   "$@";;
+            IP_ADDR_FLUSH)      $_IP addr  flush "$@";;
+            IP_LINK)            $_IP link  set   "$@";;
+            IP_ROUTE)           $_IP route add   "$@";;
+            TUNCTL)
+                local dev="$1"
+                shift
+                "${VSPACE_SHARED_CMD[@]}" $_TUNCTL --persist "$@" "$dev"
+                ;;
+            *)                  echo "Unknown interface-command type '$type'" >&2; false;;
+        esac
+
+        let ++i
+    done
+
+    unlock 1
+}
+
+function disableInterfaces
+{
+    test -n "$_HAVE_INTERFACE_OPTIONS" || _generateInterfaceOptions "$1"
+
+    local i=$INTERFACE_CMDS_IDX
+    declare -a var
+
+    lock "$__LOCKDIR"/vserver.interfaces
+    
+    while test $i -gt 0; do
+        let --i || :
+
+        eval var='( "${INTERFACE_CMDS_'$i'[@]}" )'
+        local type=${var[0]}
+        unset var[0]
+        
+        set -- "${var[@]}"
+        case "$type" in
+            IPTABLES)           ;; ## TODO
+            MODPROBE)           $_RMMOD "${2:-$1}";;
+            NAMEIF)             ;;
+            VCONFIG)            $_VCONFIG  rem "$2.$3" >/dev/null;;
+            IP_ADDR)            $_IP addr  del "$@";;
+            IP_ADDR_FLUSH)      ;;
+            IP_LINK)            ;; ## Ignore the link-down command for now
+            IP_ROUTE)           $_IP route del "$@";;
+            TUNCTL)
+                local dev="$1"
+                shift
+                $_TUNCTL --~persist "$@" "$dev"
+                ;;
+            *)                  echo "Unknown interface-command type '$type'" >&2; false;;
+        esac
+    done
+
+    unlock 1
+}
+
+case "$1" in
+	initialize)
+		: # dummy voor fixup script
+		;;
+	*)
+		;;
+esac

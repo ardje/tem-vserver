@@ -1,0 +1,45 @@
+case "$1" in
+	pre-start)
+		[ -e "$VSERVER_DIR"/tem-vtemplate.sh ]  && . "$VSERVER_DIR"/tem-vtemplate.sh
+		[ -z "$VID" ] && VID="${2#v}"
+		DEVNAME=vlan${VID}
+		[ -z "$PARENTDEV" ] && PARENTDEV=bond0
+		if [ -z "$ADDRESS" ]; then
+			if ! grep "me-$DEVNAME\>" /etc/hosts >/dev/null; then
+				echo "'me-$DEVNAME' not found in /etc/hosts! Aborting"
+				exit 1
+			fi
+			ADDRESS=$(awk '/me-'${DEVNAME}'/ { print $1 }' /etc/hosts)
+		fi
+		if [ -z "$NETMASK" ]; then
+			NETMASK=`perl -ne 'print $1 if m,me-'${DEVNAME}'\b.*?#.*?(/[0-3][0-9]),' /etc/hosts`
+			if [ -z "$NETMASK" ]; then
+				echo "'me-$DEVNAME' not followed by # /netmask ,tssk! Ass-u-me /24 ."
+				NETMASK='/24'
+			fi
+		fi
+
+		if [ -z "$GATEWAY" ]; then
+			if ! grep "gw-$DEVNAME\>" /etc/hosts >/dev/null; then
+				echo "'gw-$DEVNAME' not found in /etc/hosts! Aborting"
+				exit 1
+			fi
+			GATEWAY=$(awk '/gw-'${DEVNAME}'/ { print $1 }' /etc/hosts)
+		fi
+
+
+		$_HIP link add link $PARENTDEV name $DEVNAME type vlan id $VID
+		$_HIP link set dev $DEVNAME netns "$2"
+		$_IP address add $ADDRESS$NETMASK dev $DEVNAME
+		$_IP link set up dev $DEVNAME
+		$_IP route add default via $GATEWAY
+		;;
+	post-stop)
+		[ -z "$VID" ] && VID="${2#v}"
+		DEVNAME=vlan${VID}
+		$_IP link del $DEVNAME
+		;;
+	*)
+		;;
+esac
+return 0

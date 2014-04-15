@@ -1,0 +1,139 @@
+if [ -n "$TEM_DEBUG" ]; then echo $0 ARGS "$@"; set -x; fi
+
+function usesipnetns() {
+        local netspace
+        if [ -s "$VSERVER_DIR/spaces/net" ]
+        then
+                read netspace < "$VSERVER_DIR/spaces/net"
+                [ "$netspace" = "$VSERVER_NAME" ]
+                return $?
+        fi
+        return 1
+}
+function usesvspace() {
+        local netspace
+        if [ -s "$VSERVER_DIR/spaces/net" ]
+        then
+                read netspace < "$VSERVER_DIR/spaces/net"
+                [ -n "$netspace" ] && [ ! "$netspace" = "$VSERVER_NAME" ]
+                return $?
+        fi
+        return 1
+}
+
+function _processRouteSingleInterface()
+{
+	local gateway
+	local iface="$1"
+	_getInterfaceValue gateway  '' "$iface" "$iface/.."
+	if [ -n "$gateway" ]; then
+		_addInterfaceCmd IP_ROUTE default via $gateway
+	fi
+}
+
+function _generateRouteOptions()
+{
+	local iface
+	for iface in "$1/interfaces/"*; do
+		test   -d "$iface"          || continue
+		test ! -e "$iface"/disabled || continue
+		_processRouteSingleInterface "$iface"
+	done
+}
+case "$1" in
+	initialize)
+		if usesipnetns
+		then
+			# Override _IP to have it perform in the right namespace
+			_HIP="$_IP"
+			_IP="$_HIP netns exec ${2} $_HIP"
+			# Create the namespace and bring up lo
+			$_HIP netns add ${2}
+		 	$_IP link set dev lo up
+
+			# Prevent the umounting of "/run/netns/name" or whatever is used for netns
+			# HACK:
+			if [ ! -e "$__CONFDIR/$2/namespace-cleanup-skip" ] ||
+				! grep -q $(awk '/^proc.*netns\/'"$2"'/ { print $2 }' /proc/mounts) \
+					"$__CONFDIR/$2/namespace-cleanup-skip" ; then
+				awk '/^proc.*netns\/'"$2"'/ { print $2 }' /proc/mounts >> "$__CONFDIR/$2/namespace-cleanup-skip"
+			fi
+		fi
+		if usesvspace
+		then
+			# We use anothers network namespace, so we won't have to create interfaces.
+			# We do have to fix _IP to use that network namespace
+			_HIP="$_IP"
+			read USE_NETNAMESPACE < /etc/vservers/${2}/spaces/net
+			_IP="$_VSPACE --enter $USE_NETNAMESPACE --net $_HIP"
+		fi
+		;;
+	prepre-start)
+		_generateRouteOptions "$VSERVER_DIR"
+		;;	
+
+	# Between prepre and pre start the interface commands are executed
+
+	# By now all start options are generated, time to override them
+	pre-start)
+		# NICE_CMD=(/sbin/ip netns exec ${2} "${NICE_CMD[@]}")
+		if usesipnetns
+		then
+			local index
+			local NEWVSPACE_CMDS
+			declare -a NEWVSPACE_CMDS
+			index=0;
+			while [ $index -lt ${#VSPACE_SHARED_CMD[@]} ]
+			do
+				if
+					[ "${VSPACE_SHARED_CMD[$((${index}+0))]}" = "$_VSPACE" ] &&
+					[ "${VSPACE_SHARED_CMD[$((${index}+1))]}" = "--enter" ] &&
+					[ "${VSPACE_SHARED_CMD[$((${index}+2))]}" = "${2}" ] &&
+					[ "${VSPACE_SHARED_CMD[$((${index}+3))]}" = "--net" ]
+				then
+					NEWSPACE_CMDS=("${NEWSPACE_CMDS[@]}" $_HIP netns exec "$2")		
+					index=$(($index+5))
+				else
+					NEWSPACE_CMDS=("${NEWSPACE_CMDS[@]}" "${VSPACE_SHARED_CMD[$index]}")
+					index=$(($index+1))
+				fi
+			done
+			VSPACE_SHARED_CMD=("${NEWSPACE_CMDS[@]}")
+			unset NEWVSPACE_CMDS
+			unset index
+			$_HIP netns exec ${2} ${_VPROCUNHIDE}
+		fi
+		;;
+        post-start)
+		# Nope... nothing to do
+		;;
+	pre-stop)
+		if usesipnetns
+		then
+# 			# Kludge if we somehow loose the netns handle somewhere
+# 			# This actually does not happen
+# 			if ! grep -q $(cat "$__CONFDIR/$2/namespace-cleanup-skip") /proc/mounts
+# 			then
+# 				$_VSPACE --enter "${2}" --net $_MOUNT -o bind /proc/self/ns/net $(cat "$__CONFDIR/$2/namespace-cleanup-skip")
+# 			fi
+			# Override 
+			_HIP="$_IP"
+			_IP="$_HIP netns exec ${2} $_HIP"
+		fi
+		if usesvspace
+		then
+			# We use anothers network namespace, so we won't have to create interfaces.
+			# We do have to fix _IP to use that network namespace
+			_HIP="$_IP"
+			read USE_NETNAMESPACE < /etc/vservers/${2}/spaces/net
+			_IP="$_VSPACE --enter $USE_NETNAMESPACE --net $_HIP"
+		fi
+		;;
+	postpost-stop)
+		if usesipnetns
+		then
+			$_HIP netns delete ${2}
+		fi
+		;;
+esac
+return 0

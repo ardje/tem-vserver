@@ -1,0 +1,81 @@
+if [ -n "$TEM_DEBUG" ]; then echo $0 ARGS "$@"; set -x; fi
+
+function usesoldnetspace() {
+        local netspace
+        if [ -e "$VSERVER_DIR/spaces/net" ]
+        then
+                read netspace < "$VSERVER_DIR/spaces/net"
+                [ -z "$netspace" ]
+                return $?
+        fi
+        return 1
+}
+case "$1" in
+	initialize)
+		if usesoldnetspace
+		then
+			# Override _IP to have it perform in the right namespace
+			_HIP="$_IP"
+			_IP="$_HIP netns exec ${2} $_HIP"
+			# Create the namespace and bring up lo
+			$_HIP netns add ${2}
+		 	$_IP link set dev lo up
+
+			# Prevent the umounting of "/run/netns/name" or whatever is used for netns
+			# HACK:
+			# Werkt helaas alleen op een schone installatie?
+			#if [ ! -e "$__CONFDIR/$2/namespace-cleanup-skip" ] ||
+			#	! grep -q $(awk '/^proc.*netns\/'"$2"'/ { print $2 }' /proc/mounts) \
+			#		"$__CONFDIR/$2/namespace-cleanup-skip" ; then
+			#	awk '/^proc.*netns\/'"$2"'/ { print $2 }' /proc/mounts >> "$__CONFDIR/$2/namespace-cleanup-skip"
+			#fi
+			OPTS_VSPACE_SHARED=( "${OPTS_VSPACE_SHARED[@]}" --net )
+			VSPACE_SHARED_CMD=("${VSPACE_SHARED_CMD[@]}" $_HIP netns exec ${2} )
+		fi
+		;;
+
+	# Between prepre and pre start the interface commands are executed
+
+	# By now all start options are generated, time to override them
+	pre-start)
+		if usesoldnetspace
+		then
+			local index
+			local NEW_OPTS_VSPACE
+			declare -a NEW_OPTS_VSPACE
+			index=0;
+			while [ $index -lt ${#OPTS_VSPACE[@]} ]
+			do
+				if
+					[ "${OPTS_VSPACE[$((${index}))]}" = "--net" ]
+				then
+					NEW_OPTS_VSPACE=("${NEW_OPTS_VSPACE[@]}")
+				else
+					NEW_OPTS_VSPACE=("${NEW_OPTS_VSPACE[@]}" "${OPTS_VSPACE[$index]}")
+				fi
+				index=$(($index+1))
+			done
+			OPTS_VSPACE=("${NEW_OPTS_VSPACE[@]}")
+			unset NEW_OPTS_VSPACE
+			unset index
+			$_HIP netns exec ${2} ${_VPROCUNHIDE}
+		fi
+		;;
+        post-start)
+		# Nope... nothing to do
+		;;
+	pre-stop)
+		if usesoldnetspace
+		then
+			_HIP="$_IP"
+			_IP="$_HIP netns exec ${2} $_HIP"
+		fi
+		;;
+	postpost-stop)
+		if usesoldnetspace
+		then
+			$_HIP netns delete ${2}
+		fi
+		;;
+esac
+return 0

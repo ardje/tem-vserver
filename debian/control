@@ -1,0 +1,15 @@
+Source: tem-vserver
+Section: admin
+Priority: optional
+Maintainer: Paul Slootman <paul@telegraafnet.nl>
+Standards-Version: 3.6.2
+
+Package: tem-vserver
+Architecture: all
+Depends: util-vserver (>= 0.30.216-pre3038-1.tem.3), tem-host, lua5.1, lua-posix
+Recommends: util-vserver-build, util-vserver-sysv
+Conflicts: util-vserver (= 2:0.30.216-svn2939-6)
+Description: TEM vserver scripts
+ Zodat de vservers de juiste limieten voor disk, CPU enzo krijgen.
+ Tevens de scripts voor VLAN-networked vservers.
+

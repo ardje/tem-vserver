@@ -1,0 +1,235 @@
+#!/usr/bin/lua
+
+local tem=require("tem")
+local vserver=require("tem.vserver")
+local script=require("tem.scripts")
+local ap=require("tem.args")
+local ts=require("tem.system")
+local posix=require("posix")
+local vservers=vserver.list()
+local scripts=script.list()
+
+assert(posix.chdir("/"))
+
+function parseargs(arg)
+	local options={}
+	local data={}
+	function options._debug(d,cb)
+		tem:setverbose(tonumber(cb:nextarg()))
+		return 0
+	end
+	function options._holder(d,cb)
+		d.holder=1
+		return 0
+	end
+	function options._usefreeze(d,cb)
+		d.usefreeze=1
+		return 0
+	end
+	function options._vid(d,cb)
+		d.vid=cb:nextarg()
+		return d.vid,"Expected vlan id"
+	end
+	function options._ip(d,cb)
+		d.ip=cb:nextarg()
+		return d.ip,"Expected ip address"
+	end
+	function options._gateway(d,cb)
+		d.gateway=cb:nextarg()
+		return d.gateway,"Expected ip address"
+	end
+	function options._rawdevice(d,cb)
+		d.rawdevice=cb:nextarg()
+		return d.rawdevice,"Expected a netwerk interface"
+	end
+	function options._name(d,cb)
+		d.name=cb:nextarg()
+		return d.name,"Expected a vserver name"
+	end
+	function options._freeze(d,cb)
+		d.freeze=cb:nextarg()
+		return d.freeze,"Expected a vserver name"
+	end
+	function options._script(d,cb)
+		d.script=d.script or {}
+		local s=cb:nextarg()
+		d.script[s]=s
+		if s and scripts[s] == nil then
+			return nil,"Script does not exist"
+		end
+		return s,"Expected a script name"
+	end
+	local p,e=ap.parseargs(arg,options,data)
+	if tem:verbose(4) then
+		for k,_ in pairs(options) do
+			print("options",k,_)
+		end
+	end
+	if tem:verbose(3) then
+		for k,_ in pairs(data) do
+			print("data",k,_)
+		end
+	end
+	if p == nil then
+		print(e)
+		usage()
+		os.exit(1)
+	end
+	return data,nil
+end
+function usage() 
+	print((
+	([==[
+USAGE:
+	$NAME --holder --vid <vlanid> --ip <ip address>[/<mask>] [--gateway <ip>]  [--rawdevice <device>] [--usefreeze [--freeze <freezename>]] [--script script_name]
+	$NAME --name <vserver-name> --ip <ip address> [--vid <vlanid>] [--freeze <freezename>] [--script script-name]
+	]==]):gsub("$NAME","build-vserver"))
+	)
+end
+function usagedie(message) 
+	print(message)
+	usage()
+	os.exit(1)
+end
+local freezes={}
+local latest_freeze=""
+local latest_freezen=0
+for k,_ in pairs(vservers) do
+	local fn,n=k:match("(freeze(%d+))-template")
+	if n then
+		n=tonumber(n)
+		if n > latest_freezen then
+			latest_freeze=fn
+			latest_freezen=n
+		end
+		freezes[fn]=k
+	end
+end
+print("latest freeze:",latest_freeze)
+-- os.exit(1)
+local data,e=assert(parseargs(arg))
+local vsb_cmd
+local vs
+if data.holder then
+	-- Parse data for a vlan holder
+	if data.name  then
+		usagedie("Either use holder or give a name")
+	end
+	if data.vid == nil then
+		usagedie("I need a vid to create a holder for")
+	end
+	data.name=string.format("v%d",data.vid)
+-- [[
+	if vservers[data.name] then
+		usagedie("The holder for this vlan already exists")
+	end
+-- ]]
+	vs=vserver:vserver(data.name)
+	data.spacesnet=data.name
+	vs:set("spaces/net","array",data.name)
+	data.template="vtemplate"
+	if data.usefreeze then
+		data.template=freezes[latest_freeze]
+		data.fixfreeze=1
+	end
+	if data.freeze then
+		data.template=freezes[data.freeze]
+		if data.template==nil then
+			usagedie("freeze/template is unknown")
+		end
+		data.fixfreeze=1
+	end
+	if vservers[data.template] == nil then
+		usagedie("The template "..data.template.."does not exist")
+	end
+	if data.ip == nil then
+		usagedie("I need some address")
+	end
+	data.prefix=data.ip:match("/(%d+)$") or 24
+	data.ip=data.ip:match("^([%d.]+)")
+	data.device=string.format("vlan%d",data.vid)
+	data.rawdevice=data.rawdevice or ""
+	data.gateway=data.gateway or (data.ip:match("^([%d]+%.[%d]+%.[%d]+%.)") .. "1")
+	vs:set("interfaces", "directory", { [0] = {
+		dev = data.device,
+		gateway = data.gateway,
+		ip = data.ip,
+		parentdev = data.rawdevice,
+		prefix = data.prefix } }
+	)
+
+	--vserver $id build -m clone --interface $id=lo:$ip/32 --hostname $id -- --source $template
+	vsb_cmd={"vserver",data.name,"build","-m","clone","--hostname",data.name,"--","--source",data.template}
+else
+	-- Parse data for a common vserver
+	if data.name == nil then
+		usagedie("Need at least --name [name] or --holder")
+	end
+	if vservers[data.name] then
+		usagedie("Vserver already exists")
+	end
+	vs=vserver:vserver(data.name)
+	if data.ip == nil then
+		usagedie("I need an IP address")
+	end
+	data.interface=string.format("%s=lo:%s/32",data.name,data.ip)
+	--[[
+		resolve ip to vlan holder, set data.vid
+	]]
+	if data.vid == nil then
+		usagedie("I need a vid to create a holder for, because I am too stupid to find one")
+	end
+	data.spacesnet=string.format("v%d",data.vid)
+	if vservers[data.spacesnet] == nil then
+		usagedie("I need an existing network namespace to create a vserver")
+	end
+	vs:set("spaces/net","array",data.spacesnet)
+	vs:set("apps/init/depends","array",{ data.spacesnet } )
+	if data.freeze then
+		data.template=freezes[data.freeze]
+		if data.template==nil then
+			usagedie("freeze/template is unknown")
+		end
+	else
+		data.template=freezes[latest_freeze]
+	end
+	data.fixfreeze=1
+	--vserver $id build -m clone --interface $id=lo:$ip/32 --hostname $id -- --source $template
+	vsb_cmd={"vserver",data.name,"build","-m","clone","--interface",data.interface,"--hostname",data.name,"--","--source",data.template}
+end
+local dlimits
+dlimits=vservers[data.template]:getDirectory("dlimits")
+dlimits=dlimits or { root = { inodes_total = 100000, reserved = 5, space_total = 2000000 } }
+dlimits.root.directory=vs:canonical("vdir/")
+vs:set("dlimits","directory",dlimits)
+vs:set("cflags","array",{ "VIRT_MEM", "VIRT_CPU", "VIRT_LOAD" })
+vs:set("apps/init/mark","array",{ "default" })
+if data.script then
+	vs:set("tem_scripts","hash",data.script)
+end
+
+local r=ts.system(vsb_cmd)
+if r == nil then
+	print("failed to create vserver")
+	os.exit(1)
+end
+
+if data.holder == nil then
+	vs:set("ncontext","array",{ vs:getsimple("context") })
+end
+vs:commitall()
+vs:deploy_scripts(scripts)
+tem:debug(1,"\n")
+if data.fixfreeze then
+	local fh=io.open(vs:canonical("vdir/etc/dhclient.conf"),"wb")
+	if fh then fh:close() end
+	posix.unlink(vs:canonical("vdir/var/log/exim4/paniclog"))	
+	posix.unlink(vs:canonical("vdir/usr/sbin/policy-rc.d"))	
+	vs:chrtExec({"perl","-i","-pe","s/__HOSTNAME__/"..vs:name().."/g","/etc/hostname","/etc/passwd","/etc/mailname","/etc/exim4/conf.d/main/00_telegraaf","/etc/dhclient.conf"})
+	vs:chrtExec({"perl","-i","-pe","s/localhost$/localhost "..vs:name().."/g","/etc/hosts"})
+	for _,crypto in ipairs({ "rsa","dsa","ecdsa"}) do
+		posix.unlink(vs:canonical("vdir/etc/ssh/ssh_host_"..crypto.."_key"))
+		posix.unlink(vs:canonical("vdir/etc/ssh/ssh_host_"..crypto.."_key.pub"))
+		vs:chrtExec({"ssh-keygen","-t",crypto,"-f","/etc/ssh/ssh_host_"..crypto.."_key","-N",""})
+	end
+end

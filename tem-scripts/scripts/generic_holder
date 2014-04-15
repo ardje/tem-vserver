@@ -1,0 +1,41 @@
+case "$1" in
+	prepre-start)
+		local dev devfile intdir parentdev parentdevfile
+		local MYIP VID
+		if [ -n "$_HIP" ]; then
+			MYIP="$_HIP"
+		else
+			MYIP="$_IP"
+		fi
+		for devfile in "$VSERVER_DIR"/interfaces/*/dev; do
+			intdir=$(dirname $devfile)
+			if [ -e ${intdir}/parentdev ]
+			then
+				# parentdev kan empty zijn
+				read parentdev < ${intdir}/parentdev || true
+				read dev < $devfile
+				[ -z "$parentdev" ] && parentdev="bond0"
+				VID=$(lua -e "print(('${dev}'):match('[0-9]+\$'))")	
+				$MYIP link add link "$parentdev" name "$dev" type vlan id $VID
+				if [ -e "$VSERVER_DIR"/spaces/net ]; then
+					$_HIP link set dev "${dev}" netns "$2"
+				fi
+			fi	
+		done
+		;;
+	postpost-stop)
+		local intdir dev
+		for devfile in "$VSERVER_DIR"/interfaces/*/dev; do
+			intdir=$(dirname $devfile)
+			if [ -e ${intdir}/parentdev ]
+			then
+				# Let op: dit kan omdat generic_holder < generic_network_namespace in volgorde
+				read dev < $devfile
+				$_IP link del "$dev"
+			fi	
+		done
+		;;
+	*)
+		;;
+esac
+return 0
