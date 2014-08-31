@@ -6,7 +6,7 @@ Standards-Version: 3.6.2
 
 Package: scripts-vserver
 Architecture: all
-Depends: util-vserver (>= 0.30.216-pre3034-1.tem.3), lua5.2, lua-posix
+Depends: util-vserver (>= 0.30.216-pre3033-1.tem.3), lua5.2, lua-posix
 Recommends: util-vserver-build, util-vserver-sysv
 Conflicts: util-vserver (= 2:0.30.216-svn2939-6)
 Description: vserver scripts manager
