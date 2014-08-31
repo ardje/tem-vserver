@@ -37,17 +37,13 @@ binary-indep:	checkroot build
 	$(INSTALL_DIR) debian/scripts-vserver/usr/lib/scripts-vserver/scripts \
 		debian/scripts-vserver/usr/lib/scripts-vserver/ \
 		debian/scripts-vserver/etc/scripts-vserver/scripts \
-		debian/scripts-vserver/usr/share/lua/5.1/ \
-		debian/scripts-vserver/usr/share/lua/5.2/ \
-		debian/scripts-vserver/usr/share/lua/5.1/tem/ \
-		debian/scripts-vserver/usr/share/lua/5.2/tem/ \
+		debian/scripts-vserver/usr/share/lua/5.1/vserver/ \
+		debian/scripts-vserver/usr/share/lua/5.2/vserver/ \
 		debian/scripts-vserver/etc/scripts-vserver/lib
 	$(INSTALL_FILE) tem-scripts/scripts/* debian/scripts-vserver/usr/lib/scripts-vserver/scripts
 	$(INSTALL_SCRIPT) tem-scripts/sbin/* debian/scripts-vserver/usr/local/sbin
-	$(INSTALL_FILE) tem-scripts/lib/* debian/scripts-vserver/usr/share/lua/5.1/tem
-	$(INSTALL_FILE) tem-scripts/lib/* debian/scripts-vserver/usr/share/lua/5.2/tem
-	$(INSTALL_FILE) tem-scripts/lua/* debian/scripts-vserver/usr/share/lua/5.1
-	$(INSTALL_FILE) tem-scripts/lua/* debian/scripts-vserver/usr/share/lua/5.2
+	$(INSTALL_FILE) tem-scripts/lib/* debian/scripts-vserver/usr/share/lua/5.1/vserver
+	$(INSTALL_FILE) tem-scripts/lib/* debian/scripts-vserver/usr/share/lua/5.2/vserver
 	dh_lua
 	dpkg-gencontrol -pscripts-vserver -Pdebian/scripts-vserver
 	chown -R root.root debian/scripts-vserver
