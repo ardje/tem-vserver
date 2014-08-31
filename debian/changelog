@@ -1,3 +1,8 @@
+scripts-vserver (1) local; urgency=low
+
+  * Rename to scripts-vserver since it only handles scripts
+ -- Ard van Breemen <ard@kwaak.net>  Sun, 31 Aug 2014 17:13:21 +0200
+
 tem-vserver (22) local; urgency=low
 
   * bugfixes: script, gateway

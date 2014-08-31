@@ -1,15 +1,15 @@
-Source: tem-vserver
+Source: scripts-vserver
 Section: admin
 Priority: optional
-Maintainer: Paul Slootman <paul@telegraafnet.nl>
+Maintainer: Ard van Breemen <ard@kwaak.net>
 Standards-Version: 3.6.2
 
-Package: tem-vserver
+Package: scripts-vserver
 Architecture: all
-Depends: util-vserver (>= 0.30.216-pre3038-1.tem.3), tem-host, lua5.1, lua-posix
+Depends: util-vserver (>= 0.30.216-pre3038-1.tem.3), lua5.2, lua-posix
 Recommends: util-vserver-build, util-vserver-sysv
 Conflicts: util-vserver (= 2:0.30.216-svn2939-6)
-Description: TEM vserver scripts
- Zodat de vservers de juiste limieten voor disk, CPU enzo krijgen.
- Tevens de scripts voor VLAN-networked vservers.
-
+Description: vserver scripts manager
+ Populates /etc/vserver/<name>/scripts.d/* with symlinks to setup scripts.
+ This way you can easily manage the hooks you write to complement the
+ util-vserver scripts.

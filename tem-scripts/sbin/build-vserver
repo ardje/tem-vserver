@@ -1,10 +1,10 @@
 #!/usr/bin/lua
 
-local tem=require("tem")
-local vserver=require("tem.vserver")
-local script=require("tem.scripts")
-local ap=require("tem.args")
-local ts=require("tem.system")
+local vsd=require("vserver.debug")
+local vserver=require("vserver.vserver")
+local script=require("vserver.scripts")
+local ap=require("vserver.args")
+local ts=require("vserver.system")
 local posix=require("posix")
 local vservers=vserver.list()
 local scripts=script.list()
@@ -15,7 +15,7 @@ function parseargs(arg)
 	local options={}
 	local data={}
 	function options._debug(d,cb)
-		tem:setverbose(tonumber(cb:nextarg()))
+		vsd:setverbose(tonumber(cb:nextarg()))
 		return 0
 	end
 	function options._holder(d,cb)
@@ -60,12 +60,12 @@ function parseargs(arg)
 		return s,"Expected a script name"
 	end
 	local p,e=ap.parseargs(arg,options,data)
-	if tem:verbose(4) then
+	if vsd:verbose(4) then
 		for k,_ in pairs(options) do
 			print("options",k,_)
 		end
 	end
-	if tem:verbose(3) then
+	if vsd:verbose(3) then
 		for k,_ in pairs(data) do
 			print("data",k,_)
 		end
@@ -219,7 +219,7 @@ if data.holder == nil then
 end
 vs:commitall()
 vs:deploy_scripts(scripts)
-tem:debug(1,"\n")
+vsd:debug(1,"\n")
 if data.fixfreeze then
 	local fh=io.open(vs:canonical("vdir/etc/dhclient.conf"),"wb")
 	if fh then fh:close() end

@@ -1,7 +1,7 @@
 local M={}
 M._debug_level=1
 if M._fixed_package_path == nil then
-	package.path="/root/vserver/lib/?.lua;"..package.path
+	package.path="/etc/scripts-vserver/lib/?.lua;"..package.path
 end
 M._fixed_package_path=1
 function M:verbose(level)

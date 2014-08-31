@@ -3,8 +3,8 @@ local posix=require("posix")
 local basedir="/etc/vservers"
 local MO={}
 local metaO={ __index=MO}
-local ts=require("tem.system")
-local tem=require("tem")
+local ts=require("vserver.system")
+local vsd=require("vserver.debug")
 
 function M:vserver(name)
 	self._list=self._list or {}
@@ -149,22 +149,22 @@ local function createkeypath(key)
 	local dirname=posix.dirname(key)
 	for dn in string.gmatch(dirname,"/([^/]+)") do
 		path=path.."/"..dn
-		tem:debug(4,"creating path:",path,"\n")
+		vsd:debug(4,"creating path:",path,"\n")
 		local ps=posix.stat(path)
 		if ps == nil then
 			posix.mkdir(path)
-			tem:debug(4,"creating path:",path," mkdir\n")
+			vsd:debug(4,"creating path:",path," mkdir\n")
 		elseif ps.type == "link" then
 			posix.unlink(path)
 			posix.mkdir(path)
-			tem:debug(4,"creating path:",path," unlink+mkdir\n")
+			vsd:debug(4,"creating path:",path," unlink+mkdir\n")
 		end
 	end
 	ps=posix.stat(key)
 	if ps and ps.type == "link" then
 		posix.unlink(key)
 	end
-	tem:debug(3,"prepared ",dirname,"\n")
+	vsd:debug(3,"prepared ",dirname,"\n")
 end
 local function commitdirectory(settings,path)
 	for k,v in pairs(settings) do
@@ -191,7 +191,7 @@ function MO:commit(f)
 	local st = self.settingstype[f]
 	local ss = self.settings[f]
 	if st and ss then
-		tem:debug(2,"Committing ",f,"\n")
+		vsd:debug(2,"Committing ",f,"\n")
 		if st=="array" then
 			local fn=self:canonical(f)
 			createkeypath(fn)
@@ -287,7 +287,7 @@ function MO:fix_namespace_cleanup_skip()
 	if ncs 	~= new_ncs then
 		self:set("namespace-cleanup-skip","array",{ new_ncs })
 		self:commit("namespace-cleanup-skip")
-		tem:debug(1,"fixed-namespace-cleanup;")
+		vsd:debug(1,"fixed-namespace-cleanup;")
 	end
 end
 function MO:check_interfaces()
@@ -295,7 +295,7 @@ function MO:check_interfaces()
 	if interfaces then
 		for _,v in pairs(interfaces) do
 			if v.parentdev ~= nil then
-				tem:debug(1, "hasparentdev;")
+				vsd:debug(1, "hasparentdev;")
 				return 1				
 			end
 		end
@@ -315,7 +315,7 @@ function MO:deploy_scripts(scripts)
 		if has_parentdev then
 			-- Old style doesn't really mix with "new" style
 			ts.generic_holder=1
-			tem:debug(0,"Gateway parameter will not be parsed in old style\n")
+			vsd:debug(0,"Gateway parameter will not be parsed in old style\n")
 		else
 			ts.vlan_holder=1
 		end
@@ -342,7 +342,7 @@ function MO:deploy_scripts(scripts)
 		scripts[k]:populate(self:canonical("scripts"))
 		tslist[#tslist+1]=k
 	end
-	tem:debug(1,"scripts:",table.concat(tslist,", "),";")
+	vsd:debug(1,"scripts:",table.concat(tslist,", "),";")
 end
 function MO:fix_dependency()
 	local spaces_net=self:getsimple("spaces/net")
@@ -352,7 +352,7 @@ function MO:fix_dependency()
 			depends[spaces_net]=spaces_net
 			self:set("apps/init/depends","hash",depends)
 			self:commit("apps/init/depends")
-			tem:debug(1,"fixed-dependencies;")
+			vsd:debug(1,"fixed-dependencies;")
 		end
 	end
 end

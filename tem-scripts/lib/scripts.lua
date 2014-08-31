@@ -1,7 +1,7 @@
 local M={}
 local posix=require("posix")
 -- Lokale scripts gaan dus voor package scripts!
-local basedirs={"/usr/lib/tem-vserver/scripts","/root/vserver/scripts"}
+local basedirs={"/usr/lib/scripts-vserver/scripts","/etc/scripts-vserver/scripts"}
 local MO={}
 local metaO={ __index=MO}
 

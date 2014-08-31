@@ -1,5 +1,5 @@
 #!/usr/bin/make -f
-# debian.rules file for tem-vserver
+# debian.rules file for scripts-vserver
 # Copyright 2012 Paul Slootman <paul@debian.org>
 # Based on the  sample debian.rules file - for GNU Hello (1.3).
 #   Copyright 1994,1995 by Ian Jackson.
@@ -21,44 +21,38 @@ build:
 clean: checkdir
 	-rm -f build
 	-rm -rf *~ debian/*~ debian/*.bak debian/files* debian/substvars
-	-rm -rf debian/tem-vserver*
+	-rm -rf debian/scripts-vserver*
 
 binary-indep:	checkroot build
-	$(INSTALL_DIR)	debian/tem-vserver/DEBIAN \
-			debian/tem-vserver/usr/share/doc/tem-vserver \
-			debian/tem-vserver/usr/local/sbin \
-			debian/tem-vserver/usr/local/lib/site_perl
-	$(INSTALL_FILE)	debian/changelog debian/tem-vserver/usr/share/doc/tem-vserver/changelog.Debian
-	# $(INSTALL_FILE)	README       debian/tem-vserver/usr/share/doc/tem-vserver/README
-	$(INSTALL_FILE) debian/copyright debian/tem-vserver/usr/share/doc/tem-vserver/copyright
-	$(INSTALL_SCRIPT) debian/postinst debian/postrm debian/tem-vserver/DEBIAN
+	$(INSTALL_DIR)	debian/scripts-vserver/DEBIAN \
+			debian/scripts-vserver/usr/share/doc/scripts-vserver \
+			debian/scripts-vserver/usr/local/sbin \
+			debian/scripts-vserver/usr/local/lib/site_perl
+	$(INSTALL_FILE)	debian/changelog debian/scripts-vserver/usr/share/doc/scripts-vserver/changelog.Debian
+	# $(INSTALL_FILE)	README       debian/scripts-vserver/usr/share/doc/scripts-vserver/README
+	$(INSTALL_FILE) debian/copyright debian/scripts-vserver/usr/share/doc/scripts-vserver/copyright
+	$(INSTALL_SCRIPT) debian/postinst debian/postrm debian/scripts-vserver/DEBIAN
 
 	# Scripts manager
-	$(INSTALL_DIR) debian/tem-vserver/usr/lib/tem-vserver/scripts \
-		debian/tem-vserver/usr/lib/tem-vserver/ \
-		debian/tem-vserver/root/vserver/scripts \
-		debian/tem-vserver/usr/share/lua/5.1/ \
-		debian/tem-vserver/usr/share/lua/5.2/ \
-		debian/tem-vserver/usr/share/lua/5.1/tem/ \
-		debian/tem-vserver/usr/share/lua/5.2/tem/ \
-		debian/tem-vserver/root/vserver/lib
-	$(INSTALL_FILE) tem-scripts/scripts/* debian/tem-vserver/usr/lib/tem-vserver/scripts
-	$(INSTALL_SCRIPT) tem-scripts/sbin/* debian/tem-vserver/usr/local/sbin
-	$(INSTALL_FILE) tem-scripts/lib/* debian/tem-vserver/usr/share/lua/5.1/tem
-	$(INSTALL_FILE) tem-scripts/lib/* debian/tem-vserver/usr/share/lua/5.2/tem
-	$(INSTALL_FILE) tem-scripts/lua/* debian/tem-vserver/usr/share/lua/5.1
-	$(INSTALL_FILE) tem-scripts/lua/* debian/tem-vserver/usr/share/lua/5.2
+	$(INSTALL_DIR) debian/scripts-vserver/usr/lib/scripts-vserver/scripts \
+		debian/scripts-vserver/usr/lib/scripts-vserver/ \
+		debian/scripts-vserver/etc/scripts-vserver/scripts \
+		debian/scripts-vserver/usr/share/lua/5.1/ \
+		debian/scripts-vserver/usr/share/lua/5.2/ \
+		debian/scripts-vserver/usr/share/lua/5.1/tem/ \
+		debian/scripts-vserver/usr/share/lua/5.2/tem/ \
+		debian/scripts-vserver/etc/scripts-vserver/lib
+	$(INSTALL_FILE) tem-scripts/scripts/* debian/scripts-vserver/usr/lib/scripts-vserver/scripts
+	$(INSTALL_SCRIPT) tem-scripts/sbin/* debian/scripts-vserver/usr/local/sbin
+	$(INSTALL_FILE) tem-scripts/lib/* debian/scripts-vserver/usr/share/lua/5.1/tem
+	$(INSTALL_FILE) tem-scripts/lib/* debian/scripts-vserver/usr/share/lua/5.2/tem
+	$(INSTALL_FILE) tem-scripts/lua/* debian/scripts-vserver/usr/share/lua/5.1
+	$(INSTALL_FILE) tem-scripts/lua/* debian/scripts-vserver/usr/share/lua/5.2
 	dh_lua
-	$(INSTALL_SCRIPT) sizing/vserver-config-size.pl debian/tem-vserver/usr/local/sbin
-	$(INSTALL_FILE) sizing/sizing.pm debian/tem-vserver/usr/local/lib/site_perl
-	$(INSTALL_SCRIPT) build-scripts/vserver/build-template.sh  debian/tem-vserver/usr/local/sbin
-	$(INSTALL_SCRIPT) build-scripts/vserver/build-vserver.sh   debian/tem-vserver/usr/local/sbin
-	$(INSTALL_SCRIPT) build-scripts/vserver/build-vlan-vserver debian/tem-vserver/usr/local/sbin
-	chmod 700 debian/tem-vserver/root
-	dpkg-gencontrol -ptem-vserver -Pdebian/tem-vserver
-	chown -R root.root debian/tem-vserver
-	chmod -R go=rX debian/tem-vserver
-	dpkg --build debian/tem-vserver ..
+	dpkg-gencontrol -pscripts-vserver -Pdebian/scripts-vserver
+	chown -R root.root debian/scripts-vserver
+	chmod -R go=rX debian/scripts-vserver
+	dpkg --build debian/scripts-vserver ..
 
 binary-arch:	checkroot build
 # nothing to do
