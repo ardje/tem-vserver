@@ -31,7 +31,6 @@ binary-indep:	checkroot build
 	$(INSTALL_FILE)	debian/changelog debian/scripts-vserver/usr/share/doc/scripts-vserver/changelog.Debian
 	# $(INSTALL_FILE)	README       debian/scripts-vserver/usr/share/doc/scripts-vserver/README
 	$(INSTALL_FILE) debian/copyright debian/scripts-vserver/usr/share/doc/scripts-vserver/copyright
-	$(INSTALL_SCRIPT) debian/postinst debian/postrm debian/scripts-vserver/DEBIAN
 
 	# Scripts manager
 	$(INSTALL_DIR) debian/scripts-vserver/usr/lib/scripts-vserver/scripts \
