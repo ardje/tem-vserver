@@ -1,0 +1,15 @@
+case "$1" in
+	prepre-start)
+		ifup --allow "host-${2}" -a || true
+		;;
+	pre-start)
+		$_HIP netns exec ${2} ifup --allow "ns-${2}" -a || true
+		;;
+	post-stop)
+		ifdown --allow "host-${2}" -a || true
+		;;
+	*)
+		;;
+esac
+return 0
+
