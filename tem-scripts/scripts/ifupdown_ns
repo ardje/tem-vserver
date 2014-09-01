@@ -6,7 +6,9 @@ case "$1" in
 		$_HIP netns exec ${2} ifup --allow "ns-${2}" -a || true
 		;;
 	post-stop)
-		ifdown --allow "host-${2}" -a || true
+		# ns as wel as host scripts should run in netns context. We can't give devices back.
+		$_HIP netns exec ${2} ifdown --allow "ns-${2}" -a || true
+		$_HIP netns exec ${2} ifdown --allow "host-${2}" -a || true
 		;;
 	*)
 		;;
