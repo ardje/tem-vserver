@@ -290,6 +290,13 @@ function MO:fix_namespace_cleanup_skip()
 		vsd:debug(1,"fixed-namespace-cleanup;")
 	end
 end
+function MO:has_interfaces()
+	local interfaces=self:getDirectory("interfaces")
+	if interfaces and #interfaces > 0 then
+		return 1				
+	end
+	return nil
+end
 function MO:check_interfaces()
 	local interfaces=self:getDirectory("interfaces")
 	if interfaces then
@@ -323,10 +330,12 @@ function MO:deploy_scripts(scripts)
 	elseif spaces_net == self:name() then
 		-- New style
 		ts.generic_network_namespace=1
-		if has_parentdev then
-			ts.generic_holder=1
-		else
-			ts.vlan_holder=1
+		if self:has_interfaces() then
+			if has_parentdev then
+				ts.generic_holder=1
+			else
+				ts.vlan_holder=1
+			end
 		end
 		self:fix_namespace_cleanup_skip()
 	else
