@@ -2,10 +2,27 @@ local M={}
 local posix=require"posix"
 local debug=require"vserver.debug"
 
+function M.exec(...)
+        local cmd
+        for k,v in pairs{...} do
+                cmd=(cmd and cmd .. " " or "" )..v
+        end
+        debug:debug(4,"# ",cmd,"\n")
+        local file=assert(io.popen(cmd))
+        if file then
+                local result=file:read("*a")
+                debug:debug(4,result)
+                return(file:close())
+        else
+                return nil
+        end
+end
 function M.nsmounted(ns)
+	debug:debug(5,"check if ",ns," mounted\n")
         local ismounted=nil
         for l in io.lines("/proc/mounts") do
-                if l:match("(/run/netns/)([^/]+)$") == ns then
+		debug:debug(5,"mount:",l,"\n")
+                if l:match("/run/netns/([^ ]+) ") == ns then
                         ismounted=true
                         break
                 end
@@ -13,28 +30,23 @@ function M.nsmounted(ns)
         return ismounted
 end
 function M.mountns(ns)
-        assert(os.execute("vspace -e "..ns.." --net mount -o bind /proc/self/ns/net /run/netns/"..ns))
+        assert(M.exec("vspace -e "..ns.." --net mount -o bind /proc/self/ns/net /run/netns/"..ns))
+end
+function M.ifsetns(netns,oldname,newname)
+	if not M.nsmounted(netns) then
+		M.mountns(netns)
+	end
+	M.ip("link set dev",oldname,"netns",netns)
+	M.ipns(netns,"ip link set dev",oldname,"name",newname)
 end
 function M.ipns(ns,...)
         if not M.nsmounted(ns) then
                 M.mountns(ns)
         end
-        return M.ip("ip netns exec",ns,...)
+        return M.ip("netns exec",ns,...)
 end
 function M.ip(...)
-        local cmd="ip"
-        for k,v in pairs{...} do
-                cmd=cmd.." "..v
-        end
-        io.write("# ",cmd,"\n")
-        local file=assert(io.popen(cmd))
-        if file then
-                local result=file:read("*a")
-                print(result)
-                return(file:close())
-        else
-                return nil
-        end
+	return M.exec("ip",...)
 end
 function M.intfexists(intf)
         return M.ip("link show dev",intf)

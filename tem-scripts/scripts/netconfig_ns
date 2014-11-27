@@ -1,4 +1,63 @@
 #!/usr/bin/lua
 local debug=require"vserver.debug"
-local phase,vserver=arg
+debug:setverbose(4)
+local phase,vserver=table.unpack(arg)
+--[[
+	prepre-start)
+	pre-start)
+	post-stop)
+]]
+local nc=require"vserver.netconfig"
+local ns=require"vserver.netip"
+local phases={}
+
+local config=nc.configload()
+local function baseif(v)
+	local baseintf="vlan"..v.vid
+	if not ns.intfexists(baseintf) then
+		ns.createvlan(config.masteriface,baseintf,v.vid)
+	end
+end
+local function mvlan(n,v)
+	local baseintf="vlan"..v.vid
+	ns.createmvlan(baseintf,n,v.mac)
+end
+local function tmpname(v)
+	return string.sub("t-"..v.vid.."-"..vserver,1,15)
+end
+
+phases["prepre-start"]=function ()
+	for k,v in pairs(config.network[vserver]) do
+		debug:debug(2,"creating ",k,"\n")
+		local tname=tmpname(v)
+		baseif(v)
+		mvlan(tname,v)
+		ns.ifsetns(vserver,tname,k)
+	end
+end
+phases["pre-start"]=function()
+	for k,v in pairs(config.network[vserver]) do
+		debug:debug(2,"configuring ",k,"\n")
+		ns.ipns(vserver,"ip addr add dev",k,v.ip)
+		if not v.noup then
+			ns.ipns(vserver,"ip link set up dev",k)
+		end
+		if v.gw then
+			ns.ipns(vserver,"ip ro add default via",v.gw,"dev",k)
+		end
+	end
+end
+phases["post-stop"]=function()
+	for k,v in pairs(config.network[vserver]) do
+		debug:debug(2,"removing ",k,"\n")
+		ns.ipns(vserver,"ip link set down dev",k)
+		ns.ipns(vserver,"ip link del",k)
+	end
+end
+
+if phases[phase] then
+	phases[phase]()
+else
+	debug:debug(0,"arguments not understood")
+end
 

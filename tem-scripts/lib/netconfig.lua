@@ -17,43 +17,52 @@ function SB.host(arg)
     end
     local ip
     if not arg.sameip then
-      local ipnet=arg.ip:match("^(%d+.%d+.%d+)")
-      local iphost=tonumber(arg.ip:match(".(%d+)$"))
-      ip=ipnet .."."..iphost+k-1
+      local ipnet,iphost=arg.ip:match("^(%d+.%d+.%d+).(%d+)")
+      ip=ipnet .."."..tonumber(iphost)+k-1 .. (arg.ip:match("(/%d+)") or "/24")
     else
       ip=arg.ip
     end
     local mac=arg.mac
     if not mac then
-      local mac1,mac2,mac3=ip:match("^%d+.(%d+).(%d+).(%d+)$")
+      local mac1,mac2,mac3=ip:match("^%d+.(%d+).(%d+).(%d+)")
       mac=string.format("%02x:%02x:%02x",mac1,mac2,mac3)
     end
     if #mac < #config.macprefix then
-      mac=config.macprefix:sub(1,-(#mac+1))..":"..mac
+      mac=config.macprefix:sub(1,-(#mac+1))..mac
+    end
+    local gw=arg.gw
+    if not gw and not arg.nogw then
+	gw=ip:match("^(%d+.%d+.%d+)") ..".1"
     end
     config.network[hostname][iface]={
       vid=arg.vid,
       mac=mac,
       ip=ip,
-      noup=arg.noup
+      noup=arg.noup,
+      gw=gw
     }
   end
 end
 
-function M.fwlan(arg)
-  SB.host{name="fw",vid=arg.vid,ip=arg.ip,iface="vlan"..arg.vid}
+function SB.fwlan(arg)
+  if arg.gw then
+    SB.host{name="fw",vid=arg.vid,ip=arg.ip,iface="vlan"..arg.vid,gw=arg.gw}
+  else
+    SB.host{name="fw",vid=arg.vid,ip=arg.ip,iface="vlan"..arg.vid,nogw=true}
+  end
   local mac=arg.mac or "10"
   if #mac < #config.vrrpmac then
-    mac=config.vrrpmac:sub(1,-(#mac+1))..":"..mac
+    mac=config.vrrpmac:sub(1,-(#mac+1))..mac
   end
-  local ip=arg.vrrpip or (arg.ip:match("^(%d+.%d+.%d+.)")).."1"
+  local ip=arg.vrrpip or (arg.ip:match("^(%d+.%d+.%d+.)")).."1"..(arg.ip:match("(/%d+)") or "/24")
   SB.host{name="fw",
     vid=arg.vid,
     sameip=true,
     iface="vlan"..arg.vid.."-gw",
     mac=mac,
     ip=ip,
-    noup=true
+    noup=true,
+    nogw=true
   }
 end
 function M.configload()
