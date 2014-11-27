@@ -1,6 +1,13 @@
+scripts-vserver (2) local; urgency=low
+
+  * Abandon ifupdown, introduce netconfig
+
+ -- Ard van Breemen <ard@kwaak.net>  Thu, 27 Nov 2014 15:28:50 +0100
+
 scripts-vserver (1) local; urgency=low
 
   * Rename to scripts-vserver since it only handles scripts
+
  -- Ard van Breemen <ard@kwaak.net>  Sun, 31 Aug 2014 17:13:21 +0200
 
 tem-vserver (22) local; urgency=low

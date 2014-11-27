@@ -1,0 +1,4 @@
+#!/usr/bin/lua
+local debug=require"vserver.debug"
+local phase,vserver=arg
+
