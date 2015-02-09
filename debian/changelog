@@ -1,3 +1,15 @@
+scripts-vserver (5) wheezy-ck; urgency=low
+
+  * fix shost kludge for single host configurations
+
+ -- Ard van Breemen <ard@kwaak.net>  Mon, 09 Feb 2015 04:52:09 +0100
+
+scripts-vserver (4) local; urgency=low
+
+  * add shost kludge for single host configurations
+
+ -- Ard van Breemen <ard@kwaak.net>  Mon, 09 Feb 2015 04:23:13 +0100
+
 scripts-vserver (3) local; urgency=low
 
   * introduce ipv6 netconfig
