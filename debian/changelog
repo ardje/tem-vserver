@@ -1,3 +1,9 @@
+scripts-vserver (3) local; urgency=low
+
+  * introduce ipv6 netconfig
+
+ -- Ard van Breemen <ard@kwaak.net>  Tue, 09 Dec 2014 12:07:14 +0100
+
 scripts-vserver (2) local; urgency=low
 
   * Abandon ifupdown, introduce netconfig

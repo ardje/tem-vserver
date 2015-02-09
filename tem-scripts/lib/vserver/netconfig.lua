@@ -22,6 +22,20 @@ function SB.host(arg)
     else
       ip=arg.ip
     end
+    local ip6
+    if arg.ip6 then
+      if not arg.sameip6 and arg.ip6 ~= "radvd" then
+        local ipnet,iphost=arg.ip6:match("^([0-9a-fA-F:]+:)([0-9a-fA-F]+)")
+        local ipmask=arg.ip6:match("(/%d+)$") or "/64"
+        ip6=ipnet ..string.format("%x",tonumber(iphost,16)+k-1) ..ipmask
+      else
+        ip6=arg.ip6
+      end
+    end
+    local ip6gw
+    if arg.ip6gw then
+      ip6gw=arg.ip6gw
+    end
     local mac=arg.mac
     if not mac then
       local mac1,mac2,mac3=ip:match("^%d+.(%d+).(%d+).(%d+)")
@@ -39,28 +53,51 @@ function SB.host(arg)
       mac=mac,
       ip=ip,
       noup=arg.noup,
-      gw=gw
+      gw=gw,
+      ip6=ip6,
+      ip6gw=ip6gw,
+      unreachable=arg.unreachable
     }
   end
 end
 
 function SB.fwlan(arg)
+  local nogw
+  local ip6gw
   if arg.gw then
-    SB.host{name="fw",vid=arg.vid,ip=arg.ip,iface="vlan"..arg.vid,gw=arg.gw}
+    nogw=nil
   else
-    SB.host{name="fw",vid=arg.vid,ip=arg.ip,iface="vlan"..arg.vid,nogw=true}
+    nogw=true
   end
+  if arg.ip6 then
+    ip6gw=arg.ip6gw or "none"
+  end
+  SB.host{
+    name="fw",
+    vid=arg.vid,ip=arg.ip,iface="vlan"..arg.vid,
+    nogw=nogw,gw=arg.gw,ip6=arg.ip6,ip6gw=arg.ip6gw,
+    unreachable=arg.unreachable
+  }
   local mac=arg.mac or "10"
   if #mac < #config.vrrpmac then
     mac=config.vrrpmac:sub(1,-(#mac+1))..mac
   end
   local ip=arg.vrrpip or (arg.ip:match("^(%d+.%d+.%d+.)")).."1"..(arg.ip:match("(/%d+)") or "/24")
+  local ip6
+  if arg.ip6 then
+    local ipnet,iphost=arg.ip6:match("^([0-9a-fA-F:]+:)([0-9a-fA-F]+)")
+    local ipmask=arg.ip6:match("(/%d+)$") or "/64"
+    ip6=arg.vrrpip6 or ipnet.."1" ..ipmask
+  end
   SB.host{name="fw",
     vid=arg.vid,
     sameip=true,
+    sameip6=true,
     iface="vlan"..arg.vid.."-gw",
     mac=mac,
     ip=ip,
+    ip6=ip6,
+    ip6gw="none",
     noup=true,
     nogw=true
   }

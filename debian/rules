@@ -42,8 +42,8 @@ binary-indep:	checkroot build
 	$(INSTALL_FILE) tem-scripts/scripts/* debian/scripts-vserver/usr/lib/scripts-vserver/scripts
 	chmod a+x debian/scripts-vserver/usr/lib/scripts-vserver/scripts/netconfig_ns
 	$(INSTALL_SCRIPT) tem-scripts/sbin/* debian/scripts-vserver/usr/local/sbin
-	$(INSTALL_FILE) tem-scripts/lib/* debian/scripts-vserver/usr/share/lua/5.1/vserver
-	$(INSTALL_FILE) tem-scripts/lib/* debian/scripts-vserver/usr/share/lua/5.2/vserver
+	$(INSTALL_FILE) tem-scripts/lib/vserver/* debian/scripts-vserver/usr/share/lua/5.1/vserver
+	$(INSTALL_FILE) tem-scripts/lib/vserver/* debian/scripts-vserver/usr/share/lua/5.2/vserver
 	dh_lua
 	dpkg-gencontrol -pscripts-vserver -Pdebian/scripts-vserver
 	chown -R root.root debian/scripts-vserver
