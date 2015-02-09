@@ -6,7 +6,7 @@ config.vrrpmac="00:00:5e:00:01:00" -- no need to change
 config.macprefix="02:00:00:00:00:00" -- fake local admin mac
 config.network={}
 function SB.shost(arg)
-  for k = 1 do
+  for k = 1,1 do
     local hostname=arg.name
     config.network[hostname]=config.network[hostname] or {}
     local iface
