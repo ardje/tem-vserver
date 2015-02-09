@@ -48,6 +48,14 @@ end
 function M.ip(...)
 	return M.exec("ip",...)
 end
+function M.sysctl(vserver,base,key,value)
+	local svalue=value
+	if type(svalue) ~= "string" then
+		svalue=tostring(svalue)
+	end
+	local cmd="sysctl -w "..(base and base.."/" or "")..key.."="..svalue
+	return M.ipns(vserver,cmd)
+end
 function M.intfexists(intf)
         return M.ip("link show dev",intf)
 end

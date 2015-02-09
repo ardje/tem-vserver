@@ -1,0 +1,69 @@
+Generic linux ipv6 primer:
+Linux needs a lot of care to make IPv6 work.
+There is only one mode that works out of the box, and that is stateless dynamic
+configuration, or radvd mode.  This mode is so glued into the system that it
+wrecks havoc on all slightly more complex configurations:
+If you build a bridge, bond vlan or whatever, ipv6 autoconfiguration will still
+probe for routers on the slave interfaces. Nice if you are doing mac-address
+failovers and the slave decides to do router solicitations.
+So what if you want a static address? What if you have a static gateway?
+On debian adding a static gateway fails because you cannot add a static gateway
+before router sollicitations have failed. That problem seems mood if you just
+sysctl disable it with a pre-up. But if your device is a vlan, the device does
+not exist in the pre-up, so sysctl won't work.
+
+Configuring IPv6 on linux correctly goes like this:
+1) Boot linux with ipv6 disabled. ( ipv6.disable_ipv6=1 on the kernel command line)
+2) create the device (loading the network driver, create a vlan, whatever)
+3) set the ipv6 sysctl for the device according to your likings
+4) enable ipv6 for the device
+5) add any static ipv6 addresses
+6) set the device up
+7) add any static routes
+
+So what about the sysctls?
+For that we need to come up with usage scenarios:
+U1) I am a simple host, everything is radvd configured. I will not ever add a
+virtual interface in my uptime. No tunnel, nothing. (No vmware and such too)
+Do: Do not boot the system with ipv6.disable_ipv6=1
+
+Every other use: boot with ipv6.disable_ipv6=1
+U2) I am a simple host, everything is radvd configured. I will probably add a
+virtual interface somewhere in my uptime
+Do: On every interface that you need ipv6, add this to your interfaces file:
+  pre-up sysctl -w net/ipv6/conf/$IFACE/disable_ipv6=0
+This has to be done for the lo device too!
+
+U3) I am a simple host, but I want a static address too next to my radvd
+Do:
+  pre-up sysctl -w net/ipv6/conf/$IFACE/disable_ipv6=0
+
+U4) I am a simple host, but I only want a static address, but I need radvd for the gateway
+Do:
+  pre-up sysctl -w net/ipv6/conf/$IFACE/autoconf=0
+  pre-up sysctl -w net/ipv6/conf/$IFACE/disable_ipv6=0
+
+U5) I am a simple host, but I want a static address and a static gateway
+Do:
+# Prevent dad troubles
+  pre-up sysctl -w net/ipv6/conf/$IFACE/dad_transmits=0
+  pre-up sysctl -w net/ipv6/conf/$IFACE/accept_dad=0
+# We do not accept hosts claiming to be routers
+  pre-up sysctl -w net/ipv6/conf/$IFACE/accept_ra=0
+# We have a static address
+  pre-up sysctl -w net/ipv6/conf/$IFACE/autoconf=0
+# We are not looking for routers
+  pre-up sysctl -w net/ipv6/conf/$IFACE/router_solicitations=0
+# But we do want IPv6
+  pre-up sysctl -w net/ipv6/conf/$IFACE/disable_ipv6=0
+
+router_sollicitations and dad configurations will prevent you from setting up
+static gateway right after bringing up the interface.
+
+scripts-vserver usage:
+netconfig_ns uses the mentioned use cases:
+Settings:
+ip6="radvd" -> U2
+ip6="address" -> U4
+ip6="address", ip6gw="address" -> U5
+
