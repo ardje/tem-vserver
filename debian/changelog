@@ -1,3 +1,9 @@
+scripts-vserver (6) wheezy-ck; urgency=low
+
+  * ipv4 less iface configuration
+
+ -- Ard van Breemen <ard@kwaak.net>  Thu, 26 Mar 2015 23:56:47 +0100
+
 scripts-vserver (5) wheezy-ck; urgency=low
 
   * fix shost kludge for single host configurations
