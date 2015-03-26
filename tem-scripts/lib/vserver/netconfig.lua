@@ -16,7 +16,7 @@ function SB.shost(arg)
       iface="eth0"
     end
     local ip
-    if not arg.sameip then
+    if not arg.sameip and arg.ip ~= nil then
       local ipnet,iphost=arg.ip:match("^(%d+.%d+.%d+).(%d+)")
       ip=ipnet .."."..tonumber(iphost)+k-1 .. (arg.ip:match("(/%d+)") or "/24")
     else
@@ -30,6 +30,20 @@ function SB.shost(arg)
     if #mac < #config.macprefix then
       mac=config.macprefix:sub(1,-(#mac+1))..mac
     end
+    local ip6
+    if arg.ip6 then
+      if not arg.sameip6 and arg.ip6 ~= "radvd" then
+        local ipnet,iphost=arg.ip6:match("^([0-9a-fA-F:]+:)([0-9a-fA-F]+)")
+        local ipmask=arg.ip6:match("(/%d+)$") or "/64"
+        ip6=ipnet ..string.format("%x",tonumber(iphost,16)+k-1) ..ipmask
+      else
+        ip6=arg.ip6
+      end
+    end
+    local ip6gw
+    if arg.ip6gw then
+      ip6gw=arg.ip6gw
+    end
     local gw=arg.gw
     if not gw and not arg.nogw then
 	gw=ip:match("^(%d+.%d+.%d+)") ..".1"
@@ -38,6 +52,8 @@ function SB.shost(arg)
       vid=arg.vid,
       mac=mac,
       ip=ip,
+      ip6=ip6,
+      ip6gw=ip6gw,
       noup=arg.noup,
       gw=gw
     }

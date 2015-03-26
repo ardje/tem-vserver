@@ -54,7 +54,10 @@ phases["pre-start"]=function()
 				ns.sysctl(vserver,sc,"accept_ra",0)
 			end
 		end
-		ns.ipns(vserver,"ip addr add dev",k,v.ip)
+		-- ipv4 is optional
+		if v.ip ~= nil then
+			ns.ipns(vserver,"ip addr add dev",k,v.ip)
+		end
 	end
 	if configureipv6lo then
 		ns.sysctl(vserver,"net/ipv6/conf/lo","disable_ipv6",0)
