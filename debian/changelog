@@ -1,3 +1,9 @@
+scripts-vserver (7) wheezy-ck; urgency=low
+
+  * posix link needs true/false boolean class, not string
+
+ -- Mon, 23 Nov 2015 09:50:41 +0100
+
 scripts-vserver (6) wheezy-ck; urgency=low
 
   * ipv4 less iface configuration

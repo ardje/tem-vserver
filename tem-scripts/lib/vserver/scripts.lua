@@ -52,7 +52,7 @@ function MO:populate(dir)
 		if posix.stat(d) == nil then
 			posix.mkdir(d)
 		end
-		posix.link(self.canonical,d .."/".. self.name,"soft")
+		posix.link(self.canonical,d .."/".. self.name,true)
 		-- print(self.canonical,d)
 	end
 end
