@@ -61,7 +61,8 @@ function SB.shost(arg)
 end
 
 function SB.host(arg)
-  for k = 1,2 do
+  -- KLUDGE: just define 6 hosts for now
+  for k = 1,6 do
     local hostname=arg.name..k
     config.network[hostname]=config.network[hostname] or {}
     local iface
