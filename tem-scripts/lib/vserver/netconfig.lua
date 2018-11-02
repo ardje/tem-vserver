@@ -55,6 +55,7 @@ function SB.shost(arg)
       ip6=ip6,
       ip6gw=ip6gw,
       noup=arg.noup,
+      mtu=arg.mtu or config.mtu,
       gw=gw
     }
   end
@@ -109,6 +110,7 @@ function SB.host(arg)
       mac=mac,
       ip=ip,
       noup=arg.noup,
+      mtu=arg.mtu or config.mtu,
       gw=gw,
       ip6=ip6,
       ip6gw=ip6gw,
@@ -119,19 +121,16 @@ end
 
 function SB.fwlan(arg)
   local nogw
-  local ip6gw
   if arg.gw then
     nogw=nil
   else
     nogw=true
   end
-  if arg.ip6 then
-    ip6gw=arg.ip6gw or "none"
-  end
   SB.host{
     name="fw",
     vid=arg.vid,ip=arg.ip,iface="vlan"..arg.vid,
     nogw=nogw,gw=arg.gw,ip6=arg.ip6,ip6gw=arg.ip6gw,
+    mtu=arg.mtu or config.mtu,
     unreachable=arg.unreachable
   }
   local mac=arg.mac or "10"
@@ -141,7 +140,7 @@ function SB.fwlan(arg)
   local ip=arg.vrrpip or (arg.ip:match("^(%d+.%d+.%d+.)")).."1"..(arg.ip:match("(/%d+)") or "/24")
   local ip6
   if arg.ip6 then
-    local ipnet,iphost=arg.ip6:match("^([0-9a-fA-F:]+:)([0-9a-fA-F]+)")
+    local ipnet,_=arg.ip6:match("^([0-9a-fA-F:]+:)([0-9a-fA-F]+)")
     local ipmask=arg.ip6:match("(/%d+)$") or "/64"
     ip6=arg.vrrpip6 or ipnet.."1" ..ipmask
   end
@@ -153,6 +152,7 @@ function SB.fwlan(arg)
     mac=mac,
     ip=ip,
     ip6=ip6,
+    mtu=arg.mtu or config.mtu,
     ip6gw="none",
     noup=true,
     nogw=true

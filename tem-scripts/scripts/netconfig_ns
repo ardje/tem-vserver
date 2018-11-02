@@ -15,12 +15,12 @@ local config=nc.configload()
 local function baseif(v)
 	local baseintf="vlan"..v.vid
 	if not ns.intfexists(baseintf) then
-		ns.createvlan(config.masteriface,baseintf,v.vid)
+		ns.createvlan(config.masteriface,baseintf,v.vid,v.mtu)
 	end
 end
 local function mvlan(n,v)
 	local baseintf="vlan"..v.vid
-	ns.createmvlan(baseintf,n,v.mac)
+	ns.createmvlan(baseintf,n,v.mac,v.mtu)
 end
 local function tmpname(v)
 	return string.sub("t-"..v.vid.."-"..vserver,1,15)
@@ -84,7 +84,7 @@ phases["pre-start"]=function()
 	end
 end
 phases["post-stop"]=function()
-	for k,v in pairs(config.network[vserver]) do
+	for k,_ in pairs(config.network[vserver]) do
 		debug:debug(2,"removing ",k,"\n")
 		ns.ipns(vserver,"ip link set down dev",k)
 		ns.ipns(vserver,"ip link del",k)

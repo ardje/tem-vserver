@@ -1,10 +1,10 @@
 local M={}
-local posix=require"posix"
+--local posix=require"posix"
 local debug=require"vserver.debug"
 
 function M.exec(...)
         local cmd
-        for k,v in pairs{...} do
+        for _,v in ipairs{...} do
                 cmd=(cmd and cmd .. " " or "" )..v
         end
         debug:debug(4,"# ",cmd,"\n")
@@ -59,16 +59,25 @@ end
 function M.intfexists(intf)
         return M.ip("link show dev",intf)
 end
-function M.createvlan(parent,intf,id)
-        M.ip("link add link",parent,"name",intf,"type vlan id",id)
+function M.createvlan(parent,intf,id,mtu)
+	if mtu then
+		M.ip("link add link",parent,"name",intf,"type vlan id",id,"mtu",mtu)
+	else
+		M.ip("link add link",parent,"name",intf,"type vlan id",id)
+	end
         M.ip("link set arp off dev",intf)
         M.ip("link set up dev",intf)
 end
-function M.createmvlan(parent,intf,mac)
-        M.ip("link add link",parent,"name",intf,"type macvlan mode bridge")
+function M.createmvlan(parent,intf,mac,mtu)
+	if mtu then
+		M.ip("link add link",parent,"name",intf,"type macvlan mode bridge","mtu",mtu)
+	else
+		M.ip("link add link",parent,"name",intf,"type macvlan mode bridge")
+	end
         M.ip("link set dev",intf,"address",mac)
 end
-function M.moveandrename(ns,intf,newintf)
+--function M.moveandrename(ns,intf,newintf)
+function M.moveandrename(_,_,_)
 end
 function M.parsearg(arg,options)
         local i=1
@@ -81,7 +90,7 @@ function M.parsearg(arg,options)
                 else
                         unparsed[#unparsed+1]=carg
                         n=0
-                end     
+                end
                 i=i+1+n
         end
 end

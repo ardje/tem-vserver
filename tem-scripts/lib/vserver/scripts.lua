@@ -5,7 +5,7 @@ local basedirs={"/usr/lib/scripts-vserver/scripts","/etc/scripts-vserver/scripts
 local MO={}
 local metaO={ __index=MO}
 
-function M.list() 
+function M.list()
 	local l={}
 	for _,bd in ipairs(basedirs) do
 		if posix.stat(bd) ~= nil then
@@ -24,11 +24,11 @@ function M.list()
 			end
 		end
 	end
-	return l	
+	return l
 end
 
 
-function MO:getphases(f)
+function MO:getphases(_)
 	if self.phases == nil
 	then
 		local p={}
@@ -48,7 +48,7 @@ function MO:populate(dir)
 		posix.mkdir(dir)
 	end
 	for _,v in ipairs(self:getphases()) do
-		d=dir .."/"..v..".d"
+		local d=dir .."/"..v..".d"
 		if posix.stat(d) == nil then
 			posix.mkdir(d)
 		end
