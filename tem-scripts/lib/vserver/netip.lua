@@ -61,7 +61,7 @@ function M.intfexists(intf)
 end
 function M.createvlan(parent,intf,id,mtu)
 	if mtu then
-		M.ip("link add link",parent,"name",intf,"type vlan id",id,"mtu",mtu)
+		M.ip("link add link",parent,"name",intf,"mtu",mtu,"type vlan id",id)
 	else
 		M.ip("link add link",parent,"name",intf,"type vlan id",id)
 	end
@@ -70,7 +70,7 @@ function M.createvlan(parent,intf,id,mtu)
 end
 function M.createmvlan(parent,intf,mac,mtu)
 	if mtu then
-		M.ip("link add link",parent,"name",intf,"type macvlan mode bridge","mtu",mtu)
+		M.ip("link add link",parent,"name",intf,"mtu",mtu,"type macvlan mode bridge")
 	else
 		M.ip("link add link",parent,"name",intf,"type macvlan mode bridge")
 	end
